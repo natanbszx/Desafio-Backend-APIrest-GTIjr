@@ -1,0 +1,1 @@
+API construída como desafio técnico para a GTI Engenharia Jr. O escopo exigia um CRUD completo de pedidos, e foram implementados como bônus: Deploy na nuvem, Testes Automatizados (Pytest), Paginação e Documentação Swagger.
