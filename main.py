@@ -105,14 +105,19 @@ def sobre_a_empresa(db: Session = Depends(get_db)):
     hoje = date.today()
 
     # 1. CONTAGEM DE STATUS (GERAL, MÊS, ANO)
-
+    
     # Geral
-    total_concluidos = db.query(models.Pedido).filter(models.Pedido.status_do_pedido == "Concluído").count()
-    total_pendentes = db.query(models.Pedido).filter(models.Pedido.status_do_pedido == "Pendente").count()
+    total_concluidos = db.query(models.Pedido).filter(
+        models.Pedido.status_do_pedido.in_(["Concluído", "Concluido"])
+    ).count()
+    
+    total_pendentes = db.query(models.Pedido).filter(
+        models.Pedido.status_do_pedido == "Pendente"
+    ).count()
 
     # Mês
     total_concluidos_mes = db.query(models.Pedido).filter(
-        models.Pedido.status_do_pedido == "Concluído",
+        models.Pedido.status_do_pedido.in_(["Concluído", "Concluido"]),
         extract('month', models.Pedido.data_do_pedido) == hoje.month,
         extract('year', models.Pedido.data_do_pedido) == hoje.year
     ).count()
@@ -125,7 +130,7 @@ def sobre_a_empresa(db: Session = Depends(get_db)):
 
     # Ano
     total_concluidos_ano = db.query(models.Pedido).filter(
-        models.Pedido.status_do_pedido == "Concluído",
+        models.Pedido.status_do_pedido.in_(["Concluído", "Concluido"]),
         extract('year', models.Pedido.data_do_pedido) == hoje.year
     ).count()
     
@@ -135,35 +140,68 @@ def sobre_a_empresa(db: Session = Depends(get_db)):
     ).count()
 
 
-    # 2. CONTAGEM DE PEDIDOS ALTOS, MEDIOS E BAIXOS DO MÊS E ANO (QUANTIDADE)
-
+    # 2. CONTAGEM DE PEDIDOS ALTOS, MÉDIOS E BAIXOS (QUANTIDADE)
+    
     # MÊS
-    altos_mes = db.query(models.Pedido).filter(models.Pedido.valor_total >= 2000, extract('month', models.Pedido.data_do_pedido) == hoje.month, extract('year', models.Pedido.data_do_pedido) == hoje.year).count()
-    medios_mes = db.query(models.Pedido).filter(models.Pedido.valor_total >= 500, models.Pedido.valor_total < 2000, extract('month', models.Pedido.data_do_pedido) == hoje.month, extract('year', models.Pedido.data_do_pedido) == hoje.year).count()
-    baixos_mes = db.query(models.Pedido).filter(models.Pedido.valor_total < 500, extract('month', models.Pedido.data_do_pedido) == hoje.month, extract('year', models.Pedido.data_do_pedido) == hoje.year).count()
+    altos_mes = db.query(models.Pedido).filter(
+        models.Pedido.valor_total >= 2000,
+        extract('month', models.Pedido.data_do_pedido) == hoje.month,
+        extract('year', models.Pedido.data_do_pedido) == hoje.year
+    ).count()
+    
+    medios_mes = db.query(models.Pedido).filter(
+        models.Pedido.valor_total >= 500,
+        models.Pedido.valor_total < 2000,
+        extract('month', models.Pedido.data_do_pedido) == hoje.month,
+        extract('year', models.Pedido.data_do_pedido) == hoje.year
+    ).count()
+    
+    baixos_mes = db.query(models.Pedido).filter(
+        models.Pedido.valor_total < 500,
+        extract('month', models.Pedido.data_do_pedido) == hoje.month,
+        extract('year', models.Pedido.data_do_pedido) == hoje.year
+    ).count()
 
     # ANO
-    altos_ano = db.query(models.Pedido).filter(models.Pedido.valor_total >= 2000, extract('year', models.Pedido.data_do_pedido) == hoje.year).count()
-    medios_ano = db.query(models.Pedido).filter(models.Pedido.valor_total >= 500, models.Pedido.valor_total < 2000, extract('year', models.Pedido.data_do_pedido) == hoje.year).count()
-    baixos_ano = db.query(models.Pedido).filter(models.Pedido.valor_total < 500, extract('year', models.Pedido.data_do_pedido) == hoje.year).count()
-
-    # 3. FATURAMENTO REAL 
-
-    # Geral
-    faturamento_geral = db.query(func.sum(models.Pedido.valor_total)).scalar() or 0.0
+    altos_ano = db.query(models.Pedido).filter(
+        models.Pedido.valor_total >= 2000,
+        extract('year', models.Pedido.data_do_pedido) == hoje.year
+    ).count()
     
+    medios_ano = db.query(models.Pedido).filter(
+        models.Pedido.valor_total >= 500,
+        models.Pedido.valor_total < 2000,
+        extract('year', models.Pedido.data_do_pedido) == hoje.year
+    ).count()
+    
+    baixos_ano = db.query(models.Pedido).filter(
+        models.Pedido.valor_total < 500,
+        extract('year', models.Pedido.data_do_pedido) == hoje.year
+    ).count()
+
+
+    # 3. FATURAMENTO REAL (Somente pedidos Concluídos)
+    
+    # Geral
+    faturamento_geral = db.query(func.sum(models.Pedido.valor_total)).filter(
+        models.Pedido.status_do_pedido.in_(["Concluído", "Concluido"])
+    ).scalar() or 0.0
+
     # Mês
     faturamento_mes = db.query(func.sum(models.Pedido.valor_total)).filter(
+        models.Pedido.status_do_pedido.in_(["Concluído", "Concluido"]),
         extract('month', models.Pedido.data_do_pedido) == hoje.month,
         extract('year', models.Pedido.data_do_pedido) == hoje.year
     ).scalar() or 0.0
-    
+
     # Ano
     faturamento_ano = db.query(func.sum(models.Pedido.valor_total)).filter(
+        models.Pedido.status_do_pedido.in_(["Concluído", "Concluido"]),
         extract('year', models.Pedido.data_do_pedido) == hoje.year
     ).scalar() or 0.0
 
-    # 4. RETORNO ORGANIZADO E LIMPO
+
+    
     return {
         "nome": "GTI Tech Store",
         "descricao": "O melhor Shopping Virtual Tech da região. Focado em entregas rápidas e sistemas eficientes.",
