@@ -72,3 +72,9 @@ pip install -r requirements.txt
 ```bash
 uvicorn main:app --reload
 ```
+
+5. Acesse a documentação local:
+Abra o navegador em: http://127.0.0.1:8000/docs
+
+Desenvolvido com dedicação por Natanael Batalha para o processo seletivo da GTI Engenharia Jr.
+
